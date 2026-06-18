@@ -69,7 +69,7 @@ public class Boid : MonoBehaviour
     }
     void FixedUpdate()
     {
-        Vector3 vel = rigid.velocity;
+        Vector3 vel = rigid.velocity.normalized ;
 
         //Предотвращение столкновений
         Vector3 velAvoid = Vector3.zero;
@@ -78,7 +78,6 @@ public class Boid : MonoBehaviour
         {
             velAvoid = pos - tooClosePos;
             velAvoid.Normalize();
-            velAvoid *= spn.Velocity;
         }
 
         //Согласование скорости
@@ -86,7 +85,6 @@ public class Boid : MonoBehaviour
         if (velAlign != Vector3.zero)
         {
             velAlign.Normalize();
-            velAlign *= spn.Velocity;
         }
 
         //Движение в сторону центра группы
@@ -95,14 +93,13 @@ public class Boid : MonoBehaviour
         {
             velCenter -= this.transform.position;
             velCenter.Normalize();
-            velCenter *= spn.Velocity;
         }
         //Организовать движение в сторону attractor
         Vector3 delta = Attractor.POS - pos;
 
         //Определить, куда двигатся - к нему или от него
         bool attracted = (delta.magnitude > spn.AttractPushDist);
-        Vector3 velAttract = delta.normalized * spn.Velocity;
+        Vector3 velAttract = delta.normalized;
         float fdt = Time.fixedDeltaTime;
 
         if (velAvoid != Vector3.zero)
@@ -115,7 +112,7 @@ public class Boid : MonoBehaviour
         }
         if (velCenter != Vector3.zero)
         {
-            vel = Vector3.Lerp(vel, velAlign, spn.FlockCentering * fdt);
+            vel = Vector3.Lerp(vel, velCenter, spn.FlockCentering * fdt);
         }
         if (attracted)
         {
