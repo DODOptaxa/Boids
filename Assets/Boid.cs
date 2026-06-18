@@ -10,16 +10,28 @@ public class Boid : MonoBehaviour
     [Header("Set Dynamically")]
     public Rigidbody rigid;
 
+    private float accelerationVel;
+    private float currentVel;
+
+    private JsonFileParser spn;
+
     private Neighborhood neighborhood;
     void Awake()
     {   
+
         neighborhood = this.GetComponent<Neighborhood>();
         rigid = this.GetComponent<Rigidbody>();
         pos = Random.insideUnitSphere * Spawner.S.jsonFile.SpawnRadius;
         Vector3 vel = Random.onUnitSphere * Spawner.S.jsonFile.Velocity;
         print(Random.onUnitSphere);
+
+        accelerationVel = Spawner.S.jsonFile.Velocity * Spawner.S.jsonFile.Acceleration;
+
         rigid.velocity = vel;
+
+        //Случайный цвет для каждого боида ----------------
         int emissionColorId = Shader.PropertyToID("_EmissionColor");
+
         Color randColor = Color.black;
         while (randColor.r + randColor.g + randColor.b < 1.1f)
         {
@@ -40,6 +52,10 @@ public class Boid : MonoBehaviour
             r.material.color = randColor;
             r.material.SetColor(emissionColorId, randColor);
         }
+        //---------------------------------------------
+
+        spn = Spawner.S.jsonFile;
+
         LookAhead();
     }
     void LookAhead()
@@ -54,7 +70,6 @@ public class Boid : MonoBehaviour
     void FixedUpdate()
     {
         Vector3 vel = rigid.velocity;
-        JsonFileParser spn = Spawner.S.jsonFile;
 
         //Предотвращение столкновений
         Vector3 velAvoid = Vector3.zero;
@@ -110,9 +125,22 @@ public class Boid : MonoBehaviour
             vel = Vector3.Lerp(vel, -velAttract, spn.AttractPush * fdt);
         }
 
-        vel = vel.normalized* spn.Velocity;
+        Vector3 moveDirection = vel.normalized;
 
-        rigid.velocity = vel;
+        //Ускорение боида, если он не сильно отклоняется от направления к аттрактору
+        float dot = Vector3.Dot(moveDirection, delta.normalized);
+
+        
+        if (dot > 0.9f) 
+        {
+            currentVel = Mathf.Lerp(currentVel, accelerationVel, spn.AccelerationSpeed * fdt);
+        }
+        else if (dot < 0.5f)
+        {
+            currentVel = Mathf.Lerp(currentVel, spn.Velocity, spn.AccelerationSpeed * fdt * (1 - dot));
+        }
+
+        rigid.velocity = vel.normalized * currentVel;
 
         LookAhead();
     }

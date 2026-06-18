@@ -14,6 +14,8 @@ public class JsonFileParser
     public float SpawnDelay = 0.1f;
 
     public float Velocity = 50;
+    public float Acceleration = 1.25f;
+    public float AccelerationSpeed = 1;
     public float NeighborDist = 25;
     public float CollDist = 50;
     public float VelMatching = 0.25f;
